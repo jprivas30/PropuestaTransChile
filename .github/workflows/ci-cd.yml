@@ -1,0 +1,64 @@
+name: CI/CD Pipeline TransChile
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16.x, 18.x]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cachear dependencias npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar Jest compatible con Node 16
+        if: startsWith(matrix.node, '16')
+        run: npm install jest@27 --save-dev
+
+      - name: Ejecutar pruebas con Jest
+        run: npm test 
+
+      - name: Reportar éxito
+        if: success()
+        run: echo "✅ API funcional en Node ${{ matrix.node }}"
+
+      - name: Reportar error
+        if: failure()
+        run: echo "❌ Falla detectada en los tests para Node ${{ matrix.node }}"
+
+  sonarqube:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  deploy-staging:
+    needs: sonarqube
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          echo "Aquí iría el despliegue a staging (ej: AWS, Docker, etc.)"
