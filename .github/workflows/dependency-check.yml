@@ -40,13 +40,16 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Create reports directory
+      run: mkdir -p ./dependency-check-reports/${{ matrix.node-version }}
+
     - name: Run OWASP Dependency-Check
       uses: dependency-check/Dependency-Check_Action@main
       with:
         project: 'TransChile (Node ${{ matrix.node-version }})'
         path: '.'
-        format: 'ALL'  # Cambiado de 'HTML,JSON' a 'ALL'
-        out: './security-reports/${{ matrix.node-version }}'
+        format: 'JSON'
+        out: './dependency-check-reports/${{ matrix.node-version }}'
         args: >-
           --disableAssembly
           --scan ./package-lock.json
@@ -56,15 +59,10 @@ jobs:
 
     - name: Run npm audit
       run: |
-        npm audit --audit-level=high --json > npm-audit-report.json || echo "npm audit found vulnerabilities"
-        npm install -g npm-audit-html
-        npx npm-audit-html < npm-audit-report.json > npm-audit-report.html
+        npm audit --audit-level=high --json > ./dependency-check-reports/${{ matrix.node-version }}/npm-audit-report.json || echo "npm audit found vulnerabilities"
 
     - name: Upload reports
       uses: actions/upload-artifact@v4
       with:
-        name: security-reports-node-${{ matrix.node-version }}
-        path: |
-          security-reports/${{ matrix.node-version }}/*
-          npm-audit-report.json
-          npm-audit-report.html
+        name: dependency-reports-node-${{ matrix.node-version }}
+        path: ./dependency-check-reports/${{ matrix.node-version }}/
