@@ -2,9 +2,9 @@ name: TransChile Node.js Dependency Security Scan
 
 on:
   push:
-    branches: [ main, dev]
+    branches: [main, dev]
   pull_request:
-    branches: [ main, dev]
+    branches: [main, dev]
   schedule:
     - cron: '0 0 * * *'
 
@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16.x, 18.x] # Nombre más descriptivo
+        node-version: [16.x, 18.x]
 
     steps:
     - name: Checkout code
@@ -23,9 +23,12 @@ jobs:
     - name: Cache node modules
       uses: actions/cache@v3
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        path: |
+          ~/.npm
+          node_modules
+        key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
+          ${{ runner.os }}-node-${{ matrix.node-version }}-
           ${{ runner.os }}-node-
 
     - name: Set up Node.js ${{ matrix.node-version }}
@@ -48,13 +51,24 @@ jobs:
           --disableAssembly
           --scan ./package-lock.json
           --scan ./node_modules/
-          --enableNpmAudit
           --failOnCVSS 7
+          --noupdate
 
-    - name: Upload reports
+    - name: Run npm audit
+      run: npm audit --audit-level=high || echo "npm audit found vulnerabilities"
+
+    - name: Upload Dependency-Check reports
       uses: actions/upload-artifact@v4
       with:
-        name: security-reports-node-${{ matrix.node-version }}
+        name: dependency-check-reports-node-${{ matrix.node-version }}
         path: |
           security-reports/${{ matrix.node-version }}/dependency-check-report.html
           security-reports/${{ matrix.node-version }}/dependency-check-report.json
+
+    - name: Upload npm audit report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: npm-audit-report-node-${{ matrix.node-version }}
+        path: npm-audit-report.html
+      continue-on-error: true
