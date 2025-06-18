@@ -45,7 +45,7 @@ jobs:
       with:
         project: 'TransChile (Node ${{ matrix.node-version }})'
         path: '.'
-        format: 'HTML,JSON'
+        format: 'ALL'  # Cambiado de 'HTML,JSON' a 'ALL'
         out: './security-reports/${{ matrix.node-version }}'
         args: >-
           --disableAssembly
@@ -55,20 +55,16 @@ jobs:
           --noupdate
 
     - name: Run npm audit
-      run: npm audit --audit-level=high || echo "npm audit found vulnerabilities"
+      run: |
+        npm audit --audit-level=high --json > npm-audit-report.json || echo "npm audit found vulnerabilities"
+        npm install -g npm-audit-html
+        npx npm-audit-html < npm-audit-report.json > npm-audit-report.html
 
-    - name: Upload Dependency-Check reports
+    - name: Upload reports
       uses: actions/upload-artifact@v4
       with:
-        name: dependency-check-reports-node-${{ matrix.node-version }}
+        name: security-reports-node-${{ matrix.node-version }}
         path: |
-          security-reports/${{ matrix.node-version }}/dependency-check-report.html
-          security-reports/${{ matrix.node-version }}/dependency-check-report.json
-
-    - name: Upload npm audit report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: npm-audit-report-node-${{ matrix.node-version }}
-        path: npm-audit-report.html
-      continue-on-error: true
+          security-reports/${{ matrix.node-version }}/*
+          npm-audit-report.json
+          npm-audit-report.html
