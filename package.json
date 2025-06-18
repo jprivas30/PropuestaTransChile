@@ -2,14 +2,14 @@
   "name": "transchile",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node app.js",
     "test": "jest --coverage",
-    "sonar": "node sonar-project.js"
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "jest": "^30.0.0",
-    "sonarqube-scanner": "^4.3.0"
+    "sonarqube-scanner": "^4.3.0",
+    "supertest": "^7.1.1"
   }
 }

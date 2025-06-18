@@ -1,0 +1,6 @@
+projectKey=transchile-node
+serverUrl=http://localhost:9000
+serverVersion=25.6.0.109173
+dashboardUrl=http://localhost:9000/dashboard?id=transchile-node
+ceTaskId=e94291a8-456f-4c91-b245-b39d78a5659e
+ceTaskUrl=http://localhost:9000/api/ce/task?id=e94291a8-456f-4c91-b245-b39d78a5659e
